@@ -1,1 +1,68 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Access prototype — Onion Communication</title><link rel="stylesheet" href="/styles.css?v=7.0"></head><body class="plain"><header class="top"><div class="wrap topin"><a class="brand brand-lockup compact" href="/"><img src="/logo.svg?v=7.0" alt=""><span><strong>Onion Communication</strong></span></a><nav><a class="home-btn" href="/"><span>←</span> Research home</a></nav></div></header><main class="access"><div class="accessnote"><p class="eyebrow">Research prototype</p><h1>Enter the communication interface.</h1><p>Accounts are authenticated by Supabase. The General channel uses the project database and realtime updates; AES-GCM and ECDH cryptographic operations remain in your browser.</p><a class="inline-home" href="/">← Return to research home</a></div><section class="auth"><div class="tabs"><button class="tab active" id="signinTab">Sign in</button><button class="tab" id="signupTab">Create account</button></div><form id="form"><div id="nameWrap" hidden><label>Name</label><input id="name" maxlength="40" autocomplete="nickname" placeholder="Your name"></div><label>Email</label><input id="email" type="email" autocomplete="email" required placeholder="name@example.com"><label>Password</label><input id="password" type="password" minlength="8" required autocomplete="current-password" placeholder="8 characters or more"><button class="primarybtn" id="submit">Sign in</button><p class="error" id="error" aria-live="polite"></p></form></section></main><script src="/config.js?v=7.0"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/supabase-auth.js?v=7.0"></script><script>let mode='signin';(async()=>{if(await OCAuth.currentUser())location.href='/chat'})();function setMode(m){mode=m;signinTab.classList.toggle('active',m==='signin');signupTab.classList.toggle('active',m==='signup');nameWrap.hidden=m!=='signup';submit.textContent=m==='signin'?'Sign in':'Create account';password.autocomplete=m==='signin'?'current-password':'new-password';error.textContent=''}signinTab.onclick=()=>setMode('signin');signupTab.onclick=()=>setMode('signup');form.onsubmit=async e=>{e.preventDefault();error.textContent='';submit.disabled=true;try{if(mode==='signin'){await OCAuth.signin(email.value,password.value);location.href='/chat'}else{const data=await OCAuth.signup(name.value,email.value,password.value);if(data.session){location.href='/chat'}else{error.style.color='#176b50';error.textContent='Account created. Check your email to confirm the address, then sign in.';setMode('signin')}}}catch(x){error.style.color='';error.textContent=x.message||'Authentication failed.'}finally{submit.disabled=false}};</script></body></html>
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Access prototype — Onion Communication</title><link rel="stylesheet" href="/styles.css?v=7.1"></head><body class="plain"><header class="top"><div class="wrap topin"><a class="brand brand-lockup compact" href="/"><img src="/logo.svg?v=7.1" alt=""><span><strong>Onion Communication</strong></span></a><nav><a class="home-btn" href="/"><span>←</span> Research home</a></nav></div></header><main class="access"><div class="accessnote"><p class="eyebrow">Research prototype</p><h1>Enter the communication interface.</h1><p>Accounts are authenticated by Supabase. The General channel uses the project database and realtime updates; AES-GCM and ECDH cryptographic operations remain in your browser.</p><a class="inline-home" href="/">← Return to research home</a></div><section class="auth"><div class="tabs"><button class="tab active" id="signinTab">Sign in</button><button class="tab" id="signupTab">Create account</button></div><form id="form"><div id="nameWrap" hidden><label>Name</label><input id="name" maxlength="40" autocomplete="nickname" placeholder="Your name"></div><label>Email</label><input id="email" type="email" autocomplete="email" required placeholder="name@example.com"><label>Password</label><input id="password" type="password" minlength="8" required autocomplete="current-password" placeholder="8 characters or more"><button class="primarybtn" id="submit">Sign in</button><p class="error" id="error" aria-live="polite"></p></form></section></main><script src="/config.js?v=7.1"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/supabase-auth.js?v=7.1"></script><script>
+const signinTabEl = document.getElementById('signinTab');
+const signupTabEl = document.getElementById('signupTab');
+const nameWrapEl = document.getElementById('nameWrap');
+const nameEl = document.getElementById('name');
+const emailEl = document.getElementById('email');
+const passwordEl = document.getElementById('password');
+const submitEl = document.getElementById('submit');
+const errorEl = document.getElementById('error');
+const formEl = document.getElementById('form');
+let mode = 'signin';
+
+(async () => {
+  const existing = await OCAuth.currentUser();
+  if (existing) location.href = '/chat';
+})();
+
+function setMode(nextMode) {
+  mode = nextMode;
+  signinTabEl.classList.toggle('active', mode === 'signin');
+  signupTabEl.classList.toggle('active', mode === 'signup');
+  nameWrapEl.hidden = mode !== 'signup';
+  submitEl.textContent = mode === 'signin' ? 'Sign in' : 'Create account';
+  passwordEl.autocomplete = mode === 'signin' ? 'current-password' : 'new-password';
+  errorEl.textContent = '';
+  errorEl.style.color = '';
+}
+
+signinTabEl.addEventListener('click', () => setMode('signin'));
+signupTabEl.addEventListener('click', () => setMode('signup'));
+
+formEl.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  errorEl.textContent = '';
+  errorEl.style.color = '';
+  submitEl.disabled = true;
+
+  try {
+    const emailValue = emailEl.value.trim();
+    const passwordValue = passwordEl.value;
+
+    if (mode === 'signin') {
+      await OCAuth.signin(emailValue, passwordValue);
+      location.href = '/chat';
+      return;
+    }
+
+    const nameValue = nameEl.value.trim();
+    if (nameValue.length < 2) {
+      throw new Error('Enter a name with at least 2 characters.');
+    }
+
+    const data = await OCAuth.signup(nameValue, emailValue, passwordValue);
+    if (data.session) {
+      location.href = '/chat';
+    } else {
+      setMode('signin');
+      errorEl.style.color = '#176b50';
+      errorEl.textContent = 'Account created. Check your email to confirm the address, then sign in.';
+    }
+  } catch (err) {
+    errorEl.style.color = '';
+    errorEl.textContent = err && err.message ? err.message : 'Authentication failed.';
+  } finally {
+    submitEl.disabled = false;
+  }
+});
+</script></body></html>

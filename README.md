@@ -23,7 +23,6 @@ Authentication URL configuration should include the production Vercel domain and
 ## Deployment
 
 Push this repository to GitHub. Vercel will automatically redeploy the connected `main` branch. No build command is required for this static project.
-URL: https://onion-communication.vercel.app/
 
 ## Security note
 
@@ -32,3 +31,7 @@ The Supabase-backed clearnet application and the Tor onion-service deployment ar
 ## Publication
 
 IEEE Xplore document 11651421 is linked from the research homepage.
+
+
+## v7.1
+Fixed the production signup form to use explicit DOM references for the Name, Email and Password fields. This avoids the browser `window.name` collision that caused valid names to fail validation.
