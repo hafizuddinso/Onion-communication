@@ -23,6 +23,7 @@ Authentication URL configuration should include the production Vercel domain and
 ## Deployment
 
 Push this repository to GitHub. Vercel will automatically redeploy the connected `main` branch. No build command is required for this static project.
+URL: https://onion-communication.vercel.app/
 
 ## Security note
 
