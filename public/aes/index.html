@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Onion Communication — AES Encryption</title>
+<link rel="stylesheet" href="shared.css?v=6.4"/>
+<style>
+body { display:flex; flex-direction:column; min-height:100vh; }
+.page-body { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+.aes-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Panels ── */
+.panel {
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+.panel:last-child { border-right: none; }
+
+.panel-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  flex-shrink: 0;
+}
+.panel-head h2 {
+  font-size: .85rem; font-weight: 600; color: var(--text);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 2px;
+}
+.panel-head h2 svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; }
+.panel-head p { font-size:.72rem; color:var(--text-dim); }
+
+.panel-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:14px; }
+
+/* ── Key section ── */
+.key-block { display:flex; flex-direction:column; gap:6px; }
+.field-label {
+  font-size:.68rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--text-dim); display:flex; align-items:center; gap:6px;
+}
+.key-row { display:flex; gap:6px; }
+.key-input {
+  flex:1; background:var(--bg3); border:1px solid var(--border2);
+  color:var(--accent); font-family:'JetBrains Mono', monospace;
+  font-size:.7rem; padding:8px 10px; border-radius:var(--r);
+  outline:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.key-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }
+
+.msg-area {
+  background:var(--bg3); border:1px solid var(--border2);
+  color:var(--text); font-family:var(--font-ui); font-size:.82rem;
+  padding:10px 12px; border-radius:var(--r); resize:none;
+  outline:none; min-height:90px; line-height:1.5;
+  transition:border-color .15s, box-shadow .15s;
+}
+.msg-area:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }
+
+.output-box {
+  background:var(--bg); border:1px solid var(--border);
+  border-radius:var(--r); padding:10px 12px;
+  font-family:'JetBrains Mono', monospace; font-size:.7rem;
+  color:var(--text-dim); word-break:break-all; min-height:60px;
+  line-height:1.6; cursor:pointer; transition:border-color .15s;
+}
+.output-box:hover { border-color:var(--border2); }
+.output-box.has-value { color:var(--text); }
+.output-box.success { border-color:var(--accent); color:var(--accent-lt); }
+
+.copy-hint { font-size:.65rem; color:var(--text-faint); margin-top:2px; }
+
+/* ── Chat panel ── */
+.chat-messages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+.msg-row { display:flex; gap:7px; animation:msgIn .15s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.msg-row.own { flex-direction:row-reverse; }
+.msg-av { width:26px; height:26px; border-radius:50%; background:var(--bg4); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:700; color:var(--text-dim); flex-shrink:0; align-self:flex-end; }
+.msg-bubble { max-width:82%; background:var(--bg3); border:1px solid var(--border); border-radius:10px 10px 10px 3px; padding:7px 10px; }
+.msg-row.own .msg-bubble { background:var(--accent-dim); border-color:var(--accent-glow); border-radius:10px 10px 3px 10px; }
+.msg-meta { display:flex; align-items:center; gap:5px; margin-bottom:2px; }
+.msg-from { font-size:.64rem; font-weight:600; color:var(--accent); }
+.msg-time  { font-size:.58rem; color:var(--text-faint); }
+.msg-text  { font-size:.78rem; line-height:1.45; word-break:break-word; }
+.msg-text.cipher { font-family:'JetBrains Mono',monospace; font-size:.65rem; color:var(--text-dim); font-style:italic; }
+.msg-text.plain  { color:#d0ffe8; }
+
+.chat-input-bar { padding:10px 12px; border-top:1px solid var(--border); display:flex; gap:7px; align-items:center; background:var(--bg2); }
+.chat-input { flex:1; background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:var(--font-ui); font-size:.8rem; padding:8px 11px; border-radius:var(--r); outline:none; transition:border-color .15s; }
+.chat-input:focus { border-color:var(--accent); }
+.send-btn { width:34px; height:34px; background:var(--accent); border:none; border-radius:var(--r); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.send-btn:hover { background:var(--accent-lt); }
+.send-btn svg { width:14px; height:14px; stroke:#fff; fill:none; stroke-width:2.2; }
+
+.room-bar { padding:8px 12px; border-bottom:1px solid var(--border); background:var(--bg2); display:flex; align-items:center; gap:8px; }
+.room-bar input { flex:1; background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:.72rem; padding:6px 9px; border-radius:var(--r); outline:none; }
+.room-bar input:focus { border-color:var(--accent); }
+
+.sys-msg { text-align:center; font-size:.65rem; color:var(--text-faint); padding:4px 0; }
+
+/* Responsive */
+@media(max-width:900px) { .aes-layout { grid-template-columns:1fr; } .panel { height:400px; } }
+</style>
+<link rel="stylesheet" href="redesign.css?v=6.4"/>
+<link rel="stylesheet" href="/unified.css?v=6.4"/>
+<link rel="stylesheet" href="/styles.css?v=6.4"/>
+<link rel="stylesheet" href="/protocol.css?v=6.4"/>
+</head>
+<body data-page="aes">
+
+<header class="top"><div class="wrap topin"><a class="brand brand-lockup compact" href="/"><img src="/logo.svg?v=6.4" alt=""><span><strong>Onion Communication</strong></span></a><nav class="system-nav"><a href="/" class="home-link">Research home</a><a href="/chat" class="system-link">Chat</a><a href="/aes" class="system-link active">AES-GCM</a><a href="/ecdh" class="system-link ">ECDH</a><button class="linkbutton signout" onclick="doLogout()">Sign out</button></nav></div></header>
+
+<div class="page-body">
+  <div class="aes-layout">
+
+    <!-- ENCRYPT PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Encrypt
+        </h2>
+        <p>Type a message → get ciphertext to share</p>
+      </div>
+      <div class="panel-body">
+        <div class="key-block">
+          <div class="field-label">AES-256 Key</div>
+          <div class="key-row">
+            <input class="key-input" id="encKey" placeholder="Generate or paste a key…" readonly/>
+            <button class="btn btn-sm copy-btn" onclick="copyField('encKey')" title="Copy key">Copy</button>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm btn-primary" onclick="genKey()">Generate key</button>
+            <button class="btn btn-sm" onclick="pasteKey('encKey')">Paste key</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="field-label" style="margin-bottom:6px;">Your message</div>
+          <textarea class="msg-area" id="encInput" placeholder="Type the message you want to encrypt…"></textarea>
+        </div>
+
+        <button class="btn btn-primary" style="justify-content:center;" onclick="doEncrypt()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Encrypt message
+        </button>
+
+        <div>
+          <div class="field-label" style="margin-bottom:6px;">Ciphertext output
+            <span style="font-weight:400;color:var(--text-faint);font-size:.63rem;">(click to copy)</span>
+          </div>
+          <div class="output-box" id="encOutput" onclick="copyOutput('encOutput')" title="Click to copy">
+            Encrypted text will appear here…
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECRYPT PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          Decrypt
+        </h2>
+        <p>Paste ciphertext + key → read the message</p>
+      </div>
+      <div class="panel-body">
+        <div class="key-block">
+          <div class="field-label">AES-256 Key</div>
+          <div class="key-row">
+            <input class="key-input" id="decKey" placeholder="Paste the shared key here…"/>
+            <button class="btn btn-sm copy-btn" onclick="copyField('decKey')" title="Copy key">Copy</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="field-label" style="margin-bottom:6px;">Ciphertext to decrypt</div>
+          <textarea class="msg-area" id="decInput" placeholder="Paste the encrypted ciphertext here…"></textarea>
+        </div>
+
+        <button class="btn btn-primary" style="justify-content:center;background:var(--yellow);border-color:var(--yellow);" onclick="doDecrypt()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          Decrypt message
+        </button>
+
+        <div>
+          <div class="field-label" style="margin-bottom:6px;">Plaintext output</div>
+          <div class="output-box" id="decOutput" onclick="copyOutput('decOutput')">
+            Decrypted text will appear here…
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE CHAT PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Live AES Chat
+        </h2>
+        <p>Join a room — messages auto-encrypt using your key</p>
+      </div>
+      <div class="room-bar">
+        <input id="roomCode" placeholder="Room code (e.g. secret42)…"/>
+        <button class="btn btn-sm btn-primary" onclick="joinRoom()">Join</button>
+        <button class="btn btn-sm" onclick="genRoom()">Random</button>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="sys-msg">Enter a room code above to start live encrypted chat.</div>
+      </div>
+      <div class="chat-input-bar">
+        <input class="chat-input" id="chatInput" placeholder="Message (auto-encrypted)…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"/>
+        <button class="send-btn" onclick="sendChat()">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page-footer">
+  <!-- TO CHANGE ADDRESS: edit the text between the spans below -->
+  <span>Onion Communication &nbsp;·&nbsp; Prospekt Ispytateley, Saint Petersburg &nbsp;·&nbsp; </span>
+  <span>Onion URL:</span> <a class="onion-address" href="https://leti2a2avnkjkkgdyvzqdgs5t37lnyuvsacff7d6hslwlxknmz3ylnid.onion">leti2a2avnkjkkgdyvzqdgs5t37lnyuvsacff7d6hslwlxknmz3ylnid.onion</a>
+</footer>
+
+<script src="/local-auth.js?v=6.4"></script>
+<script src="shared.js?v=6.4"></script>
+<script>
+if (!requireAuth()) throw 0;
+setNavUser();
+
+const TOKEN = getToken();
+const ME    = getUsername();
+
+// ── Crypto helpers ────────────────────────────────────────────────────────────
+function b2b64(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function b642b(b64) {
+  const s=atob(b64), a=new Uint8Array(s.length);
+  for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i);
+  return a.buffer;
+}
+
+let _aesKey = null;
+let _aesKeyB64 = '';
+
+async function getOrImportKey(b64) {
+  return crypto.subtle.importKey('raw', b642b(b64), {name:'AES-GCM'}, false, ['encrypt','decrypt']);
+}
+
+async function encryptText(plain, keyB64) {
+  const key = await getOrImportKey(keyB64);
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const ct  = await crypto.subtle.encrypt({name:'AES-GCM',iv}, key, new TextEncoder().encode(plain));
+  const out = new Uint8Array(12 + ct.byteLength);
+  out.set(iv, 0); out.set(new Uint8Array(ct), 12);
+  return b2b64(out.buffer);
+}
+
+async function decryptText(payload, keyB64) {
+  const key = await getOrImportKey(keyB64);
+  const buf = new Uint8Array(b642b(payload));
+  const iv  = buf.slice(0,12); const ct = buf.slice(12);
+  const pt  = await crypto.subtle.decrypt({name:'AES-GCM',iv}, key, ct);
+  return new TextDecoder().decode(pt);
+}
+
+// ── Generate key ──────────────────────────────────────────────────────────────
+async function genKey() {
+  const k    = await crypto.subtle.generateKey({name:'AES-GCM',length:256}, true, ['encrypt','decrypt']);
+  const raw  = await crypto.subtle.exportKey('raw', k);
+  _aesKeyB64 = b2b64(raw);
+  document.getElementById('encKey').value = _aesKeyB64;
+  toast('Key generated — copy it and share with your contact');
+}
+
+function pasteKey(id) {
+  navigator.clipboard.readText().then(t => {
+    document.getElementById(id).value = t.trim();
+    if (id==='encKey') _aesKeyB64 = t.trim();
+    toast('Key pasted');
+  }).catch(()=>toast('Could not read clipboard — paste manually','err'));
+}
+
+// ── Encrypt / Decrypt standalone ─────────────────────────────────────────────
+async function doEncrypt() {
+  const key  = document.getElementById('encKey').value.trim();
+  const text = document.getElementById('encInput').value.trim();
+  const out  = document.getElementById('encOutput');
+  if (!key)  { toast('Generate or paste a key first','err'); return; }
+  if (!text) { toast('Enter a message to encrypt','err'); return; }
+  try {
+    _aesKeyB64 = key;
+    const cipher = await encryptText(text, key);
+    out.textContent = cipher;
+    out.className   = 'output-box has-value success';
+    toast('Encrypted — click the box to copy');
+  } catch(e) { toast('Encryption failed: '+e.message,'err'); }
+}
+
+async function doDecrypt() {
+  const key    = document.getElementById('decKey').value.trim();
+  const cipher = document.getElementById('decInput').value.trim();
+  const out    = document.getElementById('decOutput');
+  if (!key)    { toast('Paste the AES key first','err'); return; }
+  if (!cipher) { toast('Paste the ciphertext first','err'); return; }
+  try {
+    const plain = await decryptText(cipher, key);
+    out.textContent = plain;
+    out.className   = 'output-box has-value success';
+    toast('Decrypted successfully');
+  } catch(e) { toast('Decryption failed — wrong key or corrupted data','err'); }
+}
+
+function copyOutput(id) {
+  const text = document.getElementById(id).textContent.trim();
+  if (!text || text.includes('will appear')) return;
+  navigator.clipboard.writeText(text).then(()=>toast('Copied!')).catch(()=>{});
+}
+function copyField(id) {
+  const v = document.getElementById(id).value;
+  if (!v) return;
+  navigator.clipboard.writeText(v).then(()=>toast('Copied!')).catch(()=>{});
+}
+
+// ── Live chat ─────────────────────────────────────────────────────────────────
+let chatRoom  = null;
+let chatKeyB64 = null;
+let chatLastTs = 0;
+
+async function joinRoom() {
+  const code = document.getElementById('roomCode').value.trim();
+  if (!code) { toast('Enter a room code','err'); return; }
+  const encKey = document.getElementById('encKey').value.trim() || _aesKeyB64;
+  if (!encKey) { toast('Generate or paste a key first — it will be used to encrypt chat','err'); return; }
+
+  // Derive room key from code
+  const raw  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('oc-room:'+code));
+  const k    = await crypto.subtle.exportKey('raw', await crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},true,['encrypt','decrypt']));
+  chatKeyB64 = b2b64(k);
+  chatRoom   = 'aes-'+code;
+  chatLastTs = 0;
+
+  document.getElementById('chatMessages').innerHTML = `<div class="sys-msg">Joined room "${esc(code)}" — messages are AES-256 encrypted end-to-end.</div>`;
+  toast('Joined room: '+code);
+}
+
+async function genRoom() {
+  const c = Math.random().toString(36).slice(2,10);
+  document.getElementById('roomCode').value = c;
+  await joinRoom();
+}
+
+function _roomStore(room){ return 'oc_crypto_room_'+room; }
+function _readRoom(room){ try{return JSON.parse(localStorage.getItem(_roomStore(room))||'[]')}catch(e){return[]} }
+function _writeRoom(room,arr){ localStorage.setItem(_roomStore(room),JSON.stringify(arr)); window.dispatchEvent(new CustomEvent('oc-crypto-room',{detail:room})); }
+async function sendChat() {
+  if (!chatRoom) { toast('Join a room first','err'); return; }
+  const inp=document.getElementById('chatInput'), text=inp.value.trim(); if(!text)return; inp.value='';
+  const payload=await encryptText(text,chatKeyB64); const arr=_readRoom(chatRoom);
+  arr.push({id:crypto.randomUUID(),ts:Date.now(),from:ME,text:payload,mode:'aes'}); _writeRoom(chatRoom,arr); await pollChat();
+}
+async function pollChat() {
+  if(!chatRoom)return; const msgs=_readRoom(chatRoom).filter(m=>m.ts>chatLastTs);
+  for(const m of msgs){chatLastTs=Math.max(chatLastTs,m.ts);let plain=null;try{plain=await decryptText(m.text,chatKeyB64)}catch(e){} appendChatMsg(m,plain,m.from===ME)}
+}
+window.addEventListener('storage',e=>{if(chatRoom&&e.key===_roomStore(chatRoom))pollChat()});
+window.addEventListener('oc-crypto-room',e=>{if(e.detail===chatRoom)pollChat()});
+setInterval(pollChat,1200);
+
+function appendChatMsg(m, plain, own) {
+  const wrap = document.getElementById('chatMessages');
+  const sys  = wrap.querySelector('.sys-msg');
+  const row  = document.createElement('div');
+  row.className = 'msg-row' + (own ? ' own' : '');
+  const time = new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const textClass = plain ? 'msg-text plain' : 'msg-text cipher';
+  const textContent = plain ? esc(plain) : esc(m.text.slice(0,40))+'…';
+  row.innerHTML = `
+    <div class="msg-av">${(m.from||'?')[0].toUpperCase()}</div>
+    <div class="msg-bubble">
+      <div class="msg-meta"><span class="msg-from">${esc(m.from)}</span><span class="msg-time">${time}</span><span class="badge badge-green" style="font-size:.55rem">AES</span></div>
+      <div class="${textClass}">${textContent}</div>
+    </div>`;
+  wrap.appendChild(row);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+</script>
+</body>
+</html>

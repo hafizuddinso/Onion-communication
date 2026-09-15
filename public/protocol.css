@@ -1,0 +1,48 @@
+/* v6.3 — protocol pages follow the research/chat visual system */
+body[data-page="aes"],body[data-page="esa"]{background:#eeece6!important;min-height:100vh!important;display:block!important}
+body[data-page="aes"] .page-body,body[data-page="esa"] .page-body{max-width:1440px;margin:0 auto;background:#faf9f6!important;border-left:1px solid var(--line);border-right:1px solid var(--line);min-height:calc(100vh - 78px);overflow:visible!important}
+body[data-page="aes"] .aes-layout,body[data-page="esa"] .esa-layout{width:100%!important;margin:0!important;border:0!important;background:#faf9f6!important;box-shadow:none!important;min-height:calc(100vh - 78px)!important;gap:0!important}
+body[data-page="aes"] .aes-layout{grid-template-columns:1fr 1fr 1fr!important}
+body[data-page="esa"] .esa-layout{grid-template-columns:1fr 1fr!important}
+body[data-page="aes"] .panel,body[data-page="esa"] .panel,body[data-page="aes"] .chat-panel,body[data-page="esa"] .chat-panel{border-radius:0!important;border-top:0!important;border-bottom:0!important;background:#faf9f6!important;min-height:620px!important}
+body[data-page="aes"] .panel-head,body[data-page="esa"] .panel-head,body[data-page="aes"] .chat-head,body[data-page="esa"] .chat-head{background:#efede7!important;padding:24px 28px!important;min-height:92px!important}
+body[data-page="aes"] .panel-head h2,body[data-page="esa"] .panel-head h2{font:400 29px/1.1 Georgia,"Times New Roman",serif!important;letter-spacing:-.02em}
+body[data-page="aes"] .panel-head p,body[data-page="esa"] .panel-head p{font-size:13px!important;margin-top:8px!important}
+body[data-page="aes"] .panel-body,body[data-page="esa"] .panel-body{padding:30px 28px!important;gap:24px!important}
+.field-label,.step-num{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-size:11px!important;letter-spacing:.12em!important;font-weight:750!important;color:var(--green)!important}
+.key-input,.msg-area,.chat-input,.room-bar input,.kex-key-input{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;border-radius:0!important;background:#fff!important}
+.output-box{border-radius:0!important;background:#fff!important;font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important}
+.btn,.send-btn{border-radius:4px!important;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;font-weight:700!important}
+.btn-primary,.send-btn{background:var(--green)!important;border-color:var(--green)!important}
+body[data-page="esa"] .kex-bar{grid-column:1/-1;border-radius:0!important;border:0!important;border-bottom:1px solid var(--line)!important;background:#efede7!important;padding:30px 28px!important}
+body[data-page="esa"] .kex-title{font:400 30px/1.1 Georgia,"Times New Roman",serif!important;letter-spacing:-.02em;margin-bottom:24px!important}
+body[data-page="esa"] .kex-steps{gap:0!important;border-top:1px solid var(--line)!important}
+body[data-page="esa"] .kex-step{padding:18px 18px 8px 0!important;border-right:1px solid var(--line)!important;margin-right:18px!important}
+body[data-page="esa"] .kex-step:last-child{border-right:0!important}
+body[data-page="esa"] .kex-status{border-radius:0!important;margin-top:18px!important;background:#f8f7f3!important;padding:13px 15px!important}
+.room-bar{padding:16px 18px!important}.chat-input-bar{padding:16px 18px!important}
+@media(max-width:900px){body[data-page="aes"] .aes-layout,body[data-page="esa"] .esa-layout{grid-template-columns:1fr!important}body[data-page="aes"] .panel,body[data-page="esa"] .panel,body[data-page="aes"] .chat-panel,body[data-page="esa"] .chat-panel{min-height:auto!important;border-bottom:1px solid var(--line)!important}body[data-page="esa"] .kex-bar{grid-column:1}.kex-steps{grid-template-columns:1fr!important}.kex-step{border-right:0!important;border-bottom:1px solid var(--line)!important;margin-right:0!important;padding:16px 0!important}}
+@media(max-width:560px){body[data-page="aes"] .panel-head,body[data-page="esa"] .panel-head{padding:20px 18px!important}body[data-page="aes"] .panel-body,body[data-page="esa"] .panel-body{padding:20px 18px!important}.panel-head h2{font-size:25px!important}}
+
+/* v6.4 final alignment pass */
+body[data-page="aes"] .panel-head,
+body[data-page="aes"] .chat-head { min-height:110px!important; box-sizing:border-box; }
+body[data-page="aes"] .panel-body { display:grid!important; grid-template-rows:auto auto auto 1fr; align-content:start; }
+body[data-page="aes"] .key-row,
+body[data-page="esa"] .key-row { align-items:stretch!important; }
+.key-input,.room-bar input,.kex-key-input { min-height:42px!important; box-sizing:border-box!important; }
+.btn.btn-sm { min-height:38px!important; padding:0 15px!important; display:inline-flex!important; align-items:center!important; justify-content:center!important; white-space:nowrap!important; }
+.copy-btn { min-width:64px!important; background:#fff!important; color:var(--green)!important; border:1px solid var(--green)!important; }
+.copy-btn:hover { background:var(--green)!important; color:#fff!important; }
+.msg-area { min-height:112px!important; box-sizing:border-box!important; }
+.output-box { min-height:76px!important; box-sizing:border-box!important; }
+body[data-page="esa"] .kex-steps { grid-template-columns:1fr 1fr 1fr!important; align-items:stretch!important; }
+body[data-page="esa"] .kex-step { margin:0!important; padding:18px!important; display:flex!important; flex-direction:column!important; gap:10px!important; min-width:0!important; }
+body[data-page="esa"] .kex-step:last-child { border-right:0!important; }
+body[data-page="esa"] .kex-step .btn { align-self:flex-start; }
+body[data-page="esa"] #esaReadyBadge { margin-top:auto!important; align-self:flex-start!important; }
+body[data-page="esa"] .kex-status { grid-column:1/-1; }
+.system-nav .system-link,.system-nav .home-link { color:var(--green)!important; font-weight:700!important; padding:10px 13px!important; border-radius:4px!important; }
+.system-nav .system-link:hover,.system-nav .home-link:hover { background:rgba(20,103,76,.08)!important; }
+.system-nav .system-link.active { background:var(--green)!important; color:#fff!important; }
+@media(max-width:900px){body[data-page="esa"] .kex-steps{grid-template-columns:1fr!important}body[data-page="esa"] .kex-step{border-right:0!important;border-bottom:1px solid var(--line)!important}.system-nav{gap:4px!important}}

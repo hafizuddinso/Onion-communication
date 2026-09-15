@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Onion Communication — ECDH Key Exchange</title>
+<link rel="stylesheet" href="shared.css?v=6.4"/>
+<style>
+body { display:flex; flex-direction:column; min-height:100vh; }
+.page-body { flex:1; display:flex; flex-direction:column; overflow:auto; }
+
+.esa-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr;
+  gap: 0;
+  flex: 1;
+}
+
+/* Key exchange bar - full width */
+.kex-bar {
+  grid-column: 1 / -1;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+}
+.kex-title {
+  font-size: .78rem; font-weight: 600; color: var(--text);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.kex-title svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; }
+.kex-title .badge { font-size:.62rem; }
+
+.kex-steps { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+
+.kex-step {}
+.step-num { font-size:.63rem; font-weight:600; color:var(--text-faint); letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
+.step-label { font-size:.72rem; color:var(--text-dim); margin-bottom:6px; }
+.step-label.done { color:var(--accent); }
+
+.kex-key-input {
+  width:100%; background:var(--bg3); border:1px solid var(--border2);
+  color:var(--accent); font-family:'JetBrains Mono',monospace;
+  font-size:.65rem; padding:7px 9px; border-radius:var(--r); outline:none;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.kex-key-input:focus { border-color:var(--accent); }
+
+.kex-status {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 8px 14px;
+  border-radius: var(--r);
+  font-size: .75rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.kex-status.ready { background: var(--accent-dim); border-color: var(--accent-glow); color: var(--accent); }
+
+/* ── Panels ── */
+.panel {
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+.panel:last-child { border-right: none; }
+.panel-head { padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--bg2); flex-shrink:0; }
+.panel-head h2 { font-size:.85rem; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; margin-bottom:2px; }
+.panel-head h2 svg { width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; }
+.panel-head p { font-size:.72rem; color:var(--text-dim); }
+.panel-body { flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:14px; }
+
+.field-label { font-size:.68rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.msg-area { background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:var(--font-ui); font-size:.82rem; padding:10px 12px; border-radius:var(--r); resize:none; outline:none; min-height:90px; line-height:1.5; transition:border-color .15s; }
+.msg-area:focus { border-color:var(--accent); }
+.output-box { background:var(--bg); border:1px solid var(--border); border-radius:var(--r); padding:10px 12px; font-family:'JetBrains Mono',monospace; font-size:.7rem; color:var(--text-dim); word-break:break-all; min-height:60px; line-height:1.6; cursor:pointer; }
+.output-box.success { border-color:var(--accent); color:var(--accent-lt); }
+
+/* Chat */
+.chat-panel { display:flex; flex-direction:column; overflow:hidden; grid-column:1/-1; border-top:1px solid var(--border); max-height:340px; }
+.chat-head { padding:10px 16px; border-bottom:1px solid var(--border); background:var(--bg2); font-size:.8rem; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.room-bar { padding:8px 12px; border-bottom:1px solid var(--border); background:var(--bg2); display:flex; gap:8px; }
+.room-bar input { flex:1; background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:.72rem; padding:6px 9px; border-radius:var(--r); outline:none; }
+.room-bar input:focus { border-color:var(--accent); }
+.chat-messages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+.msg-row { display:flex; gap:7px; animation:msgIn .15s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+.msg-row.own { flex-direction:row-reverse; }
+.msg-av { width:26px; height:26px; border-radius:50%; background:var(--bg4); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:700; color:var(--text-dim); flex-shrink:0; align-self:flex-end; }
+.msg-bubble { max-width:75%; background:var(--bg3); border:1px solid var(--border); border-radius:10px 10px 10px 3px; padding:7px 10px; }
+.msg-row.own .msg-bubble { background:var(--accent-dim); border-color:var(--accent-glow); border-radius:10px 10px 3px 10px; }
+.msg-meta { display:flex; align-items:center; gap:5px; margin-bottom:2px; }
+.msg-from { font-size:.64rem; font-weight:600; color:var(--accent); }
+.msg-time  { font-size:.58rem; color:var(--text-faint); }
+.msg-text  { font-size:.78rem; line-height:1.45; word-break:break-word; }
+.msg-text.cipher { font-family:'JetBrains Mono',monospace; font-size:.65rem; color:var(--text-dim); font-style:italic; }
+.msg-text.plain  { color:#d0ffe8; }
+.sys-msg { text-align:center; font-size:.65rem; color:var(--text-faint); padding:4px 0; }
+.chat-input-bar { padding:10px 12px; border-top:1px solid var(--border); display:flex; gap:7px; align-items:center; background:var(--bg2); flex-shrink:0; }
+.chat-input { flex:1; background:var(--bg3); border:1px solid var(--border2); color:var(--text); font-family:var(--font-ui); font-size:.8rem; padding:8px 11px; border-radius:var(--r); outline:none; }
+.chat-input:focus { border-color:var(--accent); }
+.send-btn { width:34px; height:34px; background:var(--blue); border:none; border-radius:var(--r); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.send-btn:hover { background:#4d9fff; }
+.send-btn svg { width:14px; height:14px; stroke:#fff; fill:none; stroke-width:2.2; }
+
+@media(max-width:800px) { .esa-layout { grid-template-columns:1fr; } .kex-steps { grid-template-columns:1fr 1fr; } }
+</style>
+<link rel="stylesheet" href="redesign.css?v=6.4"/>
+<link rel="stylesheet" href="/unified.css?v=6.4"/>
+<link rel="stylesheet" href="/styles.css?v=6.4"/>
+<link rel="stylesheet" href="/protocol.css?v=6.4"/>
+</head>
+<body data-page="esa">
+
+<header class="top"><div class="wrap topin"><a class="brand brand-lockup compact" href="/"><img src="/logo.svg?v=6.4" alt=""><span><strong>Onion Communication</strong></span></a><nav class="system-nav"><a href="/" class="home-link">Research home</a><a href="/chat" class="system-link">Chat</a><a href="/aes" class="system-link ">AES-GCM</a><a href="/ecdh" class="system-link active">ECDH</a><button class="linkbutton signout" onclick="doLogout()">Sign out</button></nav></div></header>
+
+<div class="page-body">
+  <div class="esa-layout">
+
+    <!-- KEY EXCHANGE BAR -->
+    <div class="kex-bar">
+      <div class="kex-title">
+        <svg viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        ECDH Key Exchange
+        <span class="badge badge-blue">ECDH P-256 + HKDF + AES-GCM</span>
+      </div>
+      <div class="kex-steps">
+        <div class="kex-step">
+          <div class="step-num">Step 1 — Your public key</div>
+          <div class="step-label" id="s1label">Generate and share with your contact</div>
+          <div style="display:flex;gap:5px;margin-bottom:5px;">
+            <button class="btn btn-sm btn-primary" onclick="esaGenKeys()">Generate key pair</button>
+            <button class="btn btn-sm copy-btn" onclick="copyKexField('myPub')" title="Copy public key">Copy</button>
+          </div>
+          <input class="kex-key-input" id="myPub" placeholder="Your public key appears here…" readonly/>
+        </div>
+        <div class="kex-step">
+          <div class="step-num">Step 2 — Contact's public key</div>
+          <div class="step-label" id="s2label">Paste your contact's public key</div>
+          <div style="margin-bottom:5px;">
+            <button class="btn btn-sm" onclick="pastePeerKey()">Paste from clipboard</button>
+          </div>
+          <input class="kex-key-input" id="peerPub" placeholder="Paste your contact's public key here…" style="color:var(--text-dim);"/>
+        </div>
+        <div class="kex-step">
+          <div class="step-num">Step 3 — Derive shared secret</div>
+          <div class="step-label" id="s3label">Derives AES key via ECDH + HKDF</div>
+          <button class="btn btn-sm btn-primary" onclick="esaDerive()" style="background:var(--blue);border-color:var(--blue);">Derive shared secret</button>
+        </div>
+        <div class="kex-step" style="align-self:flex-end;">
+          <div id="esaReadyBadge" class="badge badge-red">NOT READY</div>
+        </div>
+      </div>
+      <div class="kex-status" id="kexStatus">Follow the 3 steps above — both you and your contact must do this with each other's public key.</div>
+    </div>
+
+    <!-- ENCRYPT PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Encrypt
+        </h2>
+        <p>Uses the ECDH-derived shared key</p>
+      </div>
+      <div class="panel-body">
+        <div>
+          <div class="field-label">Message to encrypt</div>
+          <textarea class="msg-area" id="esaEncInput" placeholder="Type your message…"></textarea>
+        </div>
+        <button class="btn btn-primary" style="justify-content:center;" onclick="esaEncrypt()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Encrypt with ECDH key
+        </button>
+        <div>
+          <div class="field-label">Ciphertext <span style="font-weight:400;color:var(--text-faint);font-size:.63rem;">(click to copy)</span></div>
+          <div class="output-box" id="esaEncOut" onclick="copyBox('esaEncOut')">Encrypted output…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DECRYPT PANEL -->
+    <div class="panel">
+      <div class="panel-head">
+        <h2>
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          Decrypt
+        </h2>
+        <p>Uses the same ECDH-derived shared key</p>
+      </div>
+      <div class="panel-body">
+        <div>
+          <div class="field-label">Ciphertext to decrypt</div>
+          <textarea class="msg-area" id="esaDecInput" placeholder="Paste encrypted ciphertext here…"></textarea>
+        </div>
+        <button class="btn btn-primary" style="justify-content:center;background:var(--yellow);border-color:var(--yellow);" onclick="esaDecrypt()">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+          Decrypt with ECDH key
+        </button>
+        <div>
+          <div class="field-label">Plaintext result</div>
+          <div class="output-box" id="esaDecOut" onclick="copyBox('esaDecOut')">Decrypted output…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE CHAT -->
+    <div class="chat-panel">
+      <div class="chat-head">
+        <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Live ECDH Chat
+        <span class="badge badge-blue" id="chatRoomBadge">No room</span>
+      </div>
+      <div class="room-bar">
+        <input id="esaRoomCode" placeholder="Room code — enter the same code as your contact…"/>
+        <button class="btn btn-sm" style="background:var(--blue);border-color:var(--blue);color:#fff;" onclick="esaJoinRoom()">Join room</button>
+        <button class="btn btn-sm" onclick="esaGenRoom()">Random</button>
+      </div>
+      <div class="chat-messages" id="esaChatMsgs">
+        <div class="sys-msg">Complete key exchange above and join a room to start encrypted chat.</div>
+      </div>
+      <div class="chat-input-bar">
+        <input class="chat-input" id="esaChatInput" placeholder="ECDH encrypted message…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();esaSendChat();}"/>
+        <button class="send-btn" onclick="esaSendChat()">
+          <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page-footer">
+  <!-- TO CHANGE ADDRESS: edit the text between the spans below -->
+  <span>Onion Communication &nbsp;·&nbsp; Prospekt Ispytateley, Saint Petersburg &nbsp;·&nbsp; </span>
+  <span>Onion URL:</span> <a class="onion-address" href="https://leti2a2avnkjkkgdyvzqdgs5t37lnyuvsacff7d6hslwlxknmz3ylnid.onion">leti2a2avnkjkkgdyvzqdgs5t37lnyuvsacff7d6hslwlxknmz3ylnid.onion</a>
+</footer>
+
+<script src="/local-auth.js?v=6.4"></script>
+<script src="shared.js?v=6.4"></script>
+<script>
+if (!requireAuth()) throw 0;
+setNavUser();
+const TOKEN=getToken(), ME=getUsername();
+
+// ── Crypto ─────────────────────────────────────────────────────────────────────
+function b2b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function b642b(b64){ const s=atob(b64),a=new Uint8Array(s.length); for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i); return a.buffer; }
+
+const esa = { priv:null, pub:null, shared:null, room:null, lastTs:0 };
+
+async function esaGenKeys() {
+  const pair = await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},false,['deriveBits']);
+  esa.priv = pair.privateKey; esa.pub = pair.publicKey;
+  const raw = await crypto.subtle.exportKey('raw', pair.publicKey);
+  document.getElementById('myPub').value = b2b64(raw);
+  document.getElementById('s1label').textContent = '✓ Generated — copy and send to your contact';
+  document.getElementById('s1label').style.color = 'var(--accent)';
+  document.getElementById('kexStatus').textContent = 'Step 1 done. Send your public key to your contact, and ask them to send theirs back.';
+  toast('Key pair generated — copy your public key and send it to your contact');
+}
+
+async function esaDerive() {
+  const peerB64 = document.getElementById('peerPub').value.trim();
+  if (!peerB64) { toast('Paste your contact\'s public key in Step 2 first','err'); return; }
+  if (!esa.priv) { toast('Generate your key pair in Step 1 first','err'); return; }
+  try {
+    const peerKey = await crypto.subtle.importKey('raw',b642b(peerB64),{name:'ECDH',namedCurve:'P-256'},false,[]);
+    const secretBits = await crypto.subtle.deriveBits({name:'ECDH',public:peerKey}, esa.priv, 256);
+    const hkdfKey = await crypto.subtle.importKey('raw', secretBits, 'HKDF', false, ['deriveKey']);
+    esa.shared = await crypto.subtle.deriveKey(
+      {name:'HKDF',hash:'SHA-256',salt:new Uint8Array(32),info:new TextEncoder().encode('onion-communication-ecdh-v1')},
+      hkdfKey, {name:'AES-GCM',length:256}, false, ['encrypt','decrypt']
+    );
+    document.getElementById('s3label').textContent = '✓ Shared secret derived!';
+    document.getElementById('s3label').style.color = 'var(--accent)';
+    document.getElementById('esaReadyBadge').textContent = '✓ READY';
+    document.getElementById('esaReadyBadge').className = 'badge badge-green';
+    const st = document.getElementById('kexStatus');
+    st.textContent = '✓ Shared secret derived via ECDH+HKDF. Both you and your contact now share the same AES-256 key. Ready to encrypt, decrypt, and chat.';
+    st.className = 'kex-status ready';
+    toast('Shared secret derived — you are ready to communicate securely!');
+  } catch(e) { console.error(e); toast('Derivation failed — use a valid P-256 public key from another session','err'); }
+}
+
+async function enc(plain) {
+  if (!esa.shared) throw new Error('No shared key');
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},esa.shared,new TextEncoder().encode(plain));
+  const out=new Uint8Array(12+ct.byteLength); out.set(iv,0); out.set(new Uint8Array(ct),12);
+  return b2b64(out.buffer);
+}
+
+async function dec(payload) {
+  if (!esa.shared) throw new Error('No shared key');
+  const buf=new Uint8Array(b642b(payload));
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},esa.shared,buf.slice(12));
+  return new TextDecoder().decode(pt);
+}
+
+// ── Standalone encrypt/decrypt ────────────────────────────────────────────────
+async function esaEncrypt() {
+  if (!esa.shared) { toast('Derive the shared secret first','err'); return; }
+  const text = document.getElementById('esaEncInput').value.trim();
+  if (!text) { toast('Enter a message','err'); return; }
+  try {
+    const cipher = await enc(text);
+    const out = document.getElementById('esaEncOut');
+    out.textContent = cipher; out.className = 'output-box success';
+    toast('Encrypted — click the box to copy');
+  } catch(e) { toast('Encryption failed','err'); }
+}
+
+async function esaDecrypt() {
+  if (!esa.shared) { toast('Derive the shared secret first','err'); return; }
+  const cipher = document.getElementById('esaDecInput').value.trim();
+  if (!cipher) { toast('Paste ciphertext first','err'); return; }
+  try {
+    const plain = await dec(cipher);
+    const out = document.getElementById('esaDecOut');
+    out.textContent = plain; out.className = 'output-box success';
+    toast('Decrypted!');
+  } catch(e) { toast('Decryption failed — wrong key or corrupted data','err'); }
+}
+
+function copyBox(id) {
+  const t = document.getElementById(id).textContent;
+  if (!t||t.includes('output')) return;
+  navigator.clipboard.writeText(t).then(()=>toast('Copied!')).catch(()=>{});
+}
+function copyKexField(id) {
+  const v=document.getElementById(id).value; if(!v)return;
+  navigator.clipboard.writeText(v).then(()=>toast('Copied!')).catch(()=>{});
+}
+function pastePeerKey() {
+  navigator.clipboard.readText().then(t=>{document.getElementById('peerPub').value=t.trim();toast('Pasted');}).catch(()=>toast('Paste manually into the field','err'));
+}
+
+// ── Live chat ─────────────────────────────────────────────────────────────────
+async function esaJoinRoom() {
+  if (!esa.shared) { toast('Derive shared secret first','err'); return; }
+  const code = document.getElementById('esaRoomCode').value.trim();
+  if (!code) { toast('Enter a room code','err'); return; }
+  esa.room = 'esa-'+code; esa.lastTs = 0;
+  document.getElementById('chatRoomBadge').textContent = code;
+  document.getElementById('esaChatMsgs').innerHTML = `<div class="sys-msg">Joined room "${esc(code)}" — ECDH encrypted end-to-end.</div>`;
+  toast('Joined room: '+code);
+}
+function esaGenRoom() {
+  document.getElementById('esaRoomCode').value = Math.random().toString(36).slice(2,10);
+  esaJoinRoom();
+}
+
+function _esaStore(room){return 'oc_crypto_room_'+room}
+function _esaRead(room){try{return JSON.parse(localStorage.getItem(_esaStore(room))||'[]')}catch(e){return[]}}
+function _esaWrite(room,arr){localStorage.setItem(_esaStore(room),JSON.stringify(arr));window.dispatchEvent(new CustomEvent('oc-crypto-room',{detail:room}))}
+async function esaSendChat() {
+  if (!esa.room) { toast('Join a room first','err'); return; }
+  if (!esa.shared) { toast('Derive shared secret first','err'); return; }
+  const inp=document.getElementById('esaChatInput'),text=inp.value.trim();if(!text)return;inp.value='';
+  const payload=await enc(text),arr=_esaRead(esa.room);arr.push({id:crypto.randomUUID(),ts:Date.now(),from:ME,text:payload,mode:'ecdh'});_esaWrite(esa.room,arr);await pollEsaChat();
+}
+async function pollEsaChat() {
+  if(!esa.room)return;const msgs=_esaRead(esa.room).filter(m=>m.ts>esa.lastTs);
+  for(const m of msgs){esa.lastTs=Math.max(esa.lastTs,m.ts);let plain=null;try{plain=esa.shared?await dec(m.text):null}catch(e){}appendEsaMsg(m,plain,m.from===ME)}
+}
+window.addEventListener('storage',e=>{if(esa.room&&e.key===_esaStore(esa.room))pollEsaChat()});
+window.addEventListener('oc-crypto-room',e=>{if(e.detail===esa.room)pollEsaChat()});
+setInterval(pollEsaChat,1200);
+
+function appendEsaMsg(m, plain, own) {
+  const wrap=document.getElementById('esaChatMsgs');
+  const row=document.createElement('div'); row.className='msg-row'+(own?' own':'');
+  const time=new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const tc=plain?'msg-text plain':'msg-text cipher';
+  const tv=plain?esc(plain):esc(m.text.slice(0,40))+'…';
+  row.innerHTML=`<div class="msg-av">${(m.from||'?')[0].toUpperCase()}</div><div class="msg-bubble"><div class="msg-meta"><span class="msg-from">${esc(m.from)}</span><span class="msg-time">${time}</span><span class="badge badge-blue" style="font-size:.52rem">ECDH</span></div><div class="${tc}">${tv}</div></div>`;
+  wrap.appendChild(row); wrap.scrollTop=wrap.scrollHeight;
+}
+</script>
+</body>
+</html>

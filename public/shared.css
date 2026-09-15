@@ -1,0 +1,224 @@
+/* ============================================================
+   ONION COMMUNICATION v3 — SHARED STYLES
+   To change colors: edit the CSS variables under :root (dark)
+   and [data-theme="light"] below.
+   ============================================================ */
+
+/* ── THEME VARIABLES ─────────────────────────────────────── */
+:root {
+  --bg:          #0a0d12;
+  --bg2:         #0f1318;
+  --bg3:         #161c24;
+  --bg4:         #1c2430;
+  --border:      #1e2835;
+  --border2:     #28364a;
+  --accent:      #1D9E75;
+  --accent-lt:   #5DCAA5;
+  --accent-dim:  rgba(29,158,117,.12);
+  --accent-glow: rgba(29,158,117,.22);
+  --red:         #E24B4A;
+  --yellow:      #EF9F27;
+  --blue:        #378ADD;
+  --text:        #c8d3de;
+  --text-dim:    #6e7f92;
+  --text-faint:  #334050;
+  --shadow:      0 4px 24px rgba(0,0,0,.45);
+  --font-mono:   'JetBrains Mono', 'Fira Code', monospace;
+  --font-ui:     'Inter', 'Segoe UI', system-ui, sans-serif;
+  --r:           6px;
+  --r-lg:        10px;
+  --r-xl:        14px;
+}
+
+[data-theme="light"] {
+  --bg:          #f4f6f9;
+  --bg2:         #ffffff;
+  --bg3:         #eef1f5;
+  --bg4:         #e4e8ef;
+  --border:      #d5dce8;
+  --border2:     #bfc8d8;
+  --accent:      #0F6E56;
+  --accent-lt:   #1D9E75;
+  --accent-dim:  rgba(15,110,86,.1);
+  --accent-glow: rgba(15,110,86,.18);
+  --red:         #A32D2D;
+  --yellow:      #854F0B;
+  --blue:        #185FA5;
+  --text:        #1a2535;
+  --text-dim:    #4a5a70;
+  --text-faint:  #9aaabb;
+  --shadow:      0 4px 20px rgba(0,0,0,.1);
+}
+
+/* ── RESET & BASE ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background .2s, color .2s;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* Grid bg pattern — subtle dots */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: .4;
+}
+body > * { position: relative; z-index: 1; }
+
+/* ── LOGO SVG ─────────────────────────────────────────────── */
+.logo-svg { display: block; }
+
+/* ── TOP NAV ─────────────────────────────────────────────── */
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 52px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 300;
+  gap: 12px;
+}
+
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; flex-shrink: 0;
+}
+.nav-brand-name {
+  font-size: .95rem; font-weight: 600;
+  color: var(--text); letter-spacing: .02em;
+}
+.nav-brand-name span { color: var(--accent); }
+
+.nav-center {
+  display: flex; align-items: center; gap: 2px; flex: 1;
+  justify-content: center;
+}
+.nav-link {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-dim); font-family: var(--font-ui);
+  font-size: .8rem; padding: 6px 12px; border-radius: var(--r);
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  transition: color .15s, background .15s;
+}
+.nav-link:hover { color: var(--text); background: var(--bg3); }
+.nav-link.active { color: var(--accent); background: var(--accent-dim); }
+.nav-link svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+.nav-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.theme-toggle {
+  width: 32px; height: 32px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--r); cursor: pointer; color: var(--text-dim);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; flex-shrink: 0;
+}
+.theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+.theme-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+.nav-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent-dim); border: 1px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 700; color: var(--accent); flex-shrink: 0;
+}
+.nav-username { font-size: .78rem; color: var(--text); max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.btn-logout {
+  background: none; border: 1px solid var(--border2);
+  color: var(--text-dim); font-family: var(--font-ui);
+  font-size: .72rem; padding: 5px 10px; border-radius: var(--r);
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+/* ── FORM ELEMENTS ────────────────────────────────────────── */
+input[type=text], input[type=email], input[type=password], textarea, select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: .85rem;
+  padding: 9px 12px;
+  border-radius: var(--r);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+
+.btn {
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text); font-family: var(--font-ui);
+  font-size: .82rem; padding: 8px 16px; border-radius: var(--r);
+  cursor: pointer; transition: all .15s; display: inline-flex;
+  align-items: center; gap: 6px; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+.btn-primary {
+  background: var(--accent); border-color: var(--accent);
+  color: #fff; font-weight: 600;
+}
+.btn-primary:hover { background: var(--accent-lt); border-color: var(--accent-lt); color: #fff; }
+
+.btn-sm { padding: 5px 10px; font-size: .75rem; }
+.btn-icon {
+  width: 30px; height: 30px; padding: 0;
+  justify-content: center; flex-shrink: 0;
+}
+
+/* ── BADGES ───────────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: .65rem; font-weight: 600; letter-spacing: .04em;
+  padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+}
+.badge-green { background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-glow); }
+.badge-yellow { background: rgba(239,159,39,.12); color: var(--yellow); border: 1px solid rgba(239,159,39,.3); }
+.badge-blue   { background: rgba(55,138,221,.12); color: var(--blue);   border: 1px solid rgba(55,138,221,.3); }
+.badge-red    { background: rgba(226,75,74,.12);  color: var(--red);    border: 1px solid rgba(226,75,74,.3); }
+
+/* ── TOAST ────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--bg3); border: 1px solid var(--accent);
+  color: var(--accent); font-size: .78rem; padding: 10px 16px;
+  border-radius: var(--r); z-index: 9999;
+  animation: toastIn .2s ease; box-shadow: var(--shadow);
+  max-width: 320px;
+}
+.toast.err { border-color: var(--red); color: var(--red); }
+@keyframes toastIn {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── FOOTER ───────────────────────────────────────────────── */
+.page-footer {
+  text-align: center; padding: 20px;
+  border-top: 1px solid var(--border);
+  font-size: .72rem; color: var(--text-faint);
+  background: var(--bg2);
+}
+.page-footer a { color: var(--text-dim); text-decoration: none; }
+.page-footer a:hover { color: var(--accent); }
