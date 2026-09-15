@@ -49,6 +49,7 @@ function requireAuth() {
 }
 
 function doLogout() {
+  if (window.OCAuth) { OCAuth.logout(); return; }
   if (window.LocalAuth && LocalAuth.user()) { LocalAuth.logout(); return; }
   const t = getToken();
   if (t && t !== 'local-prototype') fetch('/api/auth/logout', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:t}) }).catch(()=>{});

@@ -1,33 +1,33 @@
 # Onion Communication
 
-Research prototype developed from the MSc thesis **Framework for Safe Communication in the Non-Indexed Web (Hidden Web)** at ETU “LETI” (2026).
+Research prototype developed from the MSc thesis **Framework for Safe Communication in the Non-Indexed Web (Hidden Web)** at ETU “LETI”. The interface presents the research work, a Supabase-backed authenticated General chat, and browser-side AES-GCM / ECDH cryptographic workspaces.
 
-The interface includes a general research chat, AES-256-GCM encryption/decryption, and an ECDH P-256 + HKDF-SHA-256 key-exchange workspace that derives an AES-256-GCM key.
+## Production architecture
 
-## Local preview
+- **Vercel:** static research interface and clean routes.
+- **Supabase Auth:** account creation, sign-in, sessions.
+- **Supabase PostgreSQL + Realtime:** General research-room messages.
+- **Web Crypto API:** AES-GCM and ECDH/HKDF operations remain client-side.
+- **Tor onion service:** maintained as a separate research deployment and linked from the site.
 
-```bash
-python3 -m http.server 8080 -d public
-```
+## Public routes
 
-Open `http://127.0.0.1:8080/`.
+`/`, `/login`, `/chat`, `/aes`, `/ecdh`, `/about`
 
-## Clean routes
+## Supabase configuration
 
-The project uses clean routes such as `/login`, `/chat`, `/aes`, `/ecdh`, and `/about`. The original `.html` files remain only as compatibility fallbacks; visitors do not need to see `.html` in normal navigation. Vercel also has `cleanUrls` enabled.
+The browser configuration is in `public/config.js`. It contains only the Supabase **Project URL** and **publishable key**. Never add a Supabase secret/service-role key, database password, or direct PostgreSQL connection string to this repository.
 
-## Deployment plan
+Authentication URL configuration should include the production Vercel domain and any localhost URLs used for testing.
 
-1. Upload the extracted project files to GitHub (do not upload only the ZIP).
-2. Connect the repository to Vercel.
-3. Connect Supabase Auth and database/realtime after the frontend is deployed.
-4. Keep the Tor onion service available in parallel. The clearnet Vercel deployment does not replace the onion service.
+## Deployment
 
-## Research links
+Push this repository to GitHub. Vercel will automatically redeploy the connected `main` branch. No build command is required for this static project.
 
-- Onion service: `leti2a2avnkjkkgdyvzqdgs5t37lnyuvsacff7d6hslwlxknmz3ylnid.onion`
-- IEEE publication: `https://ieeexplore.ieee.org/abstract/document/11651421`
+## Security note
 
-## Important
+The Supabase-backed clearnet application and the Tor onion-service deployment are distinct transports. AES/ECDH private material is intentionally not persisted in the Supabase message tables.
 
-The current localhost authentication and chat persistence are browser-local test implementations. They are intentionally separated from the final Supabase-backed production data layer.
+## Publication
+
+IEEE Xplore document 11651421 is linked from the research homepage.

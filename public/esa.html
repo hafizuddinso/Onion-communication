@@ -237,10 +237,10 @@ body { display:flex; flex-direction:column; min-height:100vh; }
   <span>Onion URL:</span> <a class="onion-address" href="https://leti2a2avnkjkkgdyvzqdgs5t37lnyuvsacff7d6hslwlxknmz3ylnid.onion">leti2a2avnkjkkgdyvzqdgs5t37lnyuvsacff7d6hslwlxknmz3ylnid.onion</a>
 </footer>
 
-<script src="/local-auth.js?v=6.4"></script>
-<script src="shared.js?v=6.4"></script>
+<script src="/config.js?v=7.0"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/supabase-auth.js?v=7.0"></script>
+<script src="/shared.js?v=7.0"></script>
 <script>
-if (!requireAuth()) throw 0;
+
 setNavUser();
 const TOKEN=getToken(), ME=getUsername();
 
@@ -379,5 +379,5 @@ function appendEsaMsg(m, plain, own) {
   wrap.appendChild(row); wrap.scrollTop=wrap.scrollHeight;
 }
 </script>
-</body>
+<script>(async()=>{const u=await OCAuth.currentUser();if(!u)location.href="/login";})();</script></body>
 </html>
