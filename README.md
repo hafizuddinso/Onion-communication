@@ -2,6 +2,8 @@
 
 Research prototype developed from the MSc thesis **Framework for Safe Communication in the Non-Indexed Web (Hidden Web)** at ETU “LETI”. The interface presents the research work, a Supabase-backed authenticated General chat, and browser-side AES-GCM / ECDH cryptographic workspaces.
 
+URL: https://onion-communication.vercel.app
+
 ## Production architecture
 
 - **Vercel:** static research interface and clean routes.
